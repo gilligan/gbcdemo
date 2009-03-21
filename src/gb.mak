@@ -1,24 +1,21 @@
-all: main.gbc
-
 RGBFIX=rgbfix
 AS=rgbasm
 LD=xlink
 
-ASFLAGS=
+ASFLAGS=-i../../include/
 LDFLAGS=-mmain.map -nmain.sym -tg -z00
 
-SRC = main.asm
 OBJ = $(SRC:.asm=.obj)
 
-all: main.gbc
+all: $(TARGET).gbc
 
-main.link: 
+$(TARGET).link: 
 	@echo "[objects]" > main.link
 	$(foreach obj,$(OBJ),echo $(obj) >> main.link )
 	@echo "[output]" >> main.link
 	@echo "main.gbc" >> main.link
 
-main.gbc: $(OBJ) main.link
+$(TARGET).gbc: $(OBJ) $(TARGET).link
 	$(LD) $(LDFLAGS) main.link
 	$(RGBFIX) -p -v main.gbc 
 
@@ -28,6 +25,5 @@ main.gbc: $(OBJ) main.link
 %.asm: %.S
 	$(CPP) -o $@ $<
 
-
 clean:
-	-rm -rf main.gbc *.o *.map *.sym main.link
+	-rm -rf $(TARGET).gbc *.o *.obj *.map *.sym main.link
