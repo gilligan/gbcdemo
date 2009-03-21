@@ -8,7 +8,9 @@ ASFLAGS=
 LDFLAGS=-mmain.map -nmain.sym -tg -z00
 
 SRC = main.asm
-OBJ = $(SRC:.asm=.o)
+OBJ = $(SRC:.asm=.obj)
+
+all: main.gbc
 
 main.link: 
 	@echo "[objects]" > main.link
@@ -20,8 +22,12 @@ main.gbc: $(OBJ) main.link
 	$(LD) $(LDFLAGS) main.link
 	$(RGBFIX) -p -v main.gbc 
 
-%.o: %.asm
+%.obj: %.asm
 	$(AS) $(ASFLAGS) -o$@ $< 
+
+%.asm: %.S
+	$(CPP) -o $@ $<
+
 
 clean:
 	-rm -rf main.gbc *.o *.map *.sym main.link
