@@ -1,11 +1,11 @@
 all: main.gbc
 
-UCON=$(PWD)/../tools/ucon64
-AS=$(PWD)/../tools/rgbasm
-LD=$(PWD)/../tools/xlink
+RGBFIX=rgbfix
+AS=rgbasm
+LD=xlink
 
 ASFLAGS=
-LDFLAGS=-mmain.map -nmain.sym -tg
+LDFLAGS=-mmain.map -nmain.sym -tg -z00
 
 SRC = main.asm
 OBJ = $(SRC:.asm=.o)
@@ -18,7 +18,7 @@ main.link:
 
 main.gbc: $(OBJ) main.link
 	$(LD) $(LDFLAGS) main.link
-	$(UCON) --chk --nbak $@ >/dev/null
+	$(RGBFIX) -p -v main.gbc 
 
 %.o: %.asm
 	$(AS) $(ASFLAGS) -o$@ $< 
