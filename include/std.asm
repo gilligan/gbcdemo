@@ -2,7 +2,6 @@
 ; standard functions
 ;
 
-;
 ; wait for scanline
 ;
 ; in       : b=scanline
