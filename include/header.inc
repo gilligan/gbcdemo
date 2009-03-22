@@ -11,6 +11,7 @@ SLOT 1 $4000
 .name "downtown!"
 .ramsize 0
 .emptyfill $00
+.cartridgetype 1
 .computechecksum
 .computecomplementcheck
 .romgbc
