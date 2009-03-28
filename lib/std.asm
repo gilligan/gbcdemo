@@ -6,6 +6,8 @@
 ;        [de] = dst palette data
 ;         c   = fade step (0..31)
 ;         b   = number of colors
+; output: 
+;        [de] = altered palette
 fade_white_to_pal:
 
 /*
