@@ -1,6 +1,132 @@
 ; 
-; standard functions
+; generic functions
 ;
+
+; input: [hl] = src palette data
+;        [de] = dst palette data
+;         c   = fade step (0..31)
+;         b   = number of colors
+fade_white_to_pal:
+
+/*
+   for (int i=0; i<4; i++){
+
+        r = get_red(hl[i]);
+        g = get_green(hl[i]):
+        b = get_blue(hl[i]);
+
+        r += c; if (r>31) r=31;
+        g += c; if (g>31) g=31;
+        b += c; if (b>31) b=31;
+
+        de[i] = compose_pal(r,g,b)
+   }
+   
+*/
+
+.equ temp_blue 0
+.equ temp_green 1
+.equ temp_red 2
+
+color_change_lp:
+
+        ld a,[hl]
+        srl a
+        srl a     ; a = blue
+        add c     ; add color delta
+        bit 5,a
+        jp z,blue_foo
+        ld a,$0f
+blue_foo:
+        ld [SCRATCH+temp_blue],a
+
+        ld a,[hl]
+        sla a
+        sla a
+        sla a
+        ld b,a
+        ld a,[hl+]
+        srl a
+        srl a
+        srl a
+        srl a
+        srl a
+        or b
+        and %11111 ; a = green
+        add c      ; add color delta
+        bit 5,a
+        jp z,green_foo
+        ld a,$0f
+green_foo:
+        ld [SCRATCH+temp_green],a
+
+        ld a,[hl+]
+        and %11111 ; a = red
+        add c
+        bit 5,a
+        jp z,red_foo
+red_foo:
+        ld a,$0f
+        ld [SCRATCH+temp_red],a
+
+        ; 
+        ; compose R/G/B and store values back
+        ; 
+        ld a,[SCRATCH+temp_blue]
+        sla a
+        sla a
+        ld b,a
+        ld a,[SCRATCH+temp_green]
+        srl a
+        srl a
+        srl a
+        and %11
+        ld [de],a ; store upper byte (blue/green)
+        inc de
+
+        ld a,[SCRATCH+temp_green]
+        and %111
+        sla a
+        sla a
+        sla a
+        sla a
+        sla a
+        ld b,a
+        ld a,[SCRATCH+temp_red]
+        or b
+        ld [de],a
+        inc de
+
+        dec b
+        jp nz,color_change_lp
+ 
+        ret
+
+sprite_load_dma:
+	push	af
+	ld	a, $C0
+	ldh	($46), A			; $46 == r_dma
+	ld	a, $28
+
+-	dec	a
+	jr	nz, -
+	pop	af
+	ret
+
+;
+; copies the sprite handler code
+; to $FF80 (has to be executed from there)
+;
+copy_sprite_handler:
+        ld hl,$ff80
+        ld de,sprite_load_dma
+        .rept 12
+        ld a,[hl+]
+        ld [de],a
+        inc a
+        .endr
+        ret
+
 
 ; wait for scanline
 ;
@@ -19,13 +145,6 @@ hblank:
         and %11
         jp nz,hblank
         ret
-
-.macro wait_vblank
-@wait:
-        ld a,[STAT]
-        and 1
-        jp z,@wait
-.endm
 
 ;
 ; copy bc bytes of memory from [hl] to [de]
@@ -92,25 +211,6 @@ read_joypad:
 	ret           ; <- Return from Subroutine
 
 
-;
-; stupid macro to do (bc>>n)
-;
-.macro shr16_bc
-        .rept \1
-                srl b
-                rr c
-        .endr
-.endm
-
-;
-; stupid macro to do (bc<<n)
-;
-.macro shl16_bc
-        .rept \1
-        sla c
-        rl b
-        .endr
-.endm
 
 
 ;

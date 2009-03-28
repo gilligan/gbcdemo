@@ -1,21 +1,3 @@
-.rombanksize $4000
-.rombanks 4
-
-.memorymap
-SLOTSIZE $4000
-DEFAULTSLOT 1
-SLOT 0 $0000
-SLOT 1 $4000
-.endme
-
-.name "downtown!"
-.ramsize 0
-.emptyfill $00
-.cartridgetype 1
-.computechecksum
-.computecomplementcheck
-.romgbc
-
 .BANK 0
 .ORG $104
 

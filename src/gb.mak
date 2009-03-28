@@ -10,7 +10,7 @@ all: $(TARGET).gbc
 
 $(TARGET).link: 
 	@echo "[objects]" > main.link
-	$(foreach obj,$(OBJ),echo $(obj) >> main.link )
+	@echo $(OBJ) | sed -e 's/\ /\n/' >> main.link
 
 $(TARGET).gbc: $(OBJ) $(TARGET).link
 	$(LD) $(LDFLAGS) main.link $(TARGET).gbc
