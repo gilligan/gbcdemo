@@ -22,4 +22,4 @@ $(TARGET).gbc: $(OBJ) $(TARGET).link
 	$(CPP) -E -P -o $@ $<
 
 clean:
-	-rm -rf $(TARGET).gbc *.o *.obj *.map *.sym main.link
+	-rm -rf $(TARGET).{gbc,map,sym,link} *.o *.obj 

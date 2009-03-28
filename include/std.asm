@@ -20,6 +20,13 @@ hblank:
         jp nz,hblank
         ret
 
+.macro wait_vblank
+@wait:
+        ld a,[STAT]
+        and 1
+        jp z,@wait
+.endm
+
 ;
 ; copy bc bytes of memory from [hl] to [de]
 ;
