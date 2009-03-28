@@ -411,7 +411,8 @@ void shoveError(const char *name, QWidget *widget = NULL)
 
 
 
-void EditorShow::mouseMoveEvent ( QMouseEvent * event )  {hax->mouse(event->x(), event->y()); }
+void EditorShow::mouseMoveEvent  ( QMouseEvent * event )  {hax->mouse(event->x(), event->y()); }
+void EditorShow::mousePressEvent ( QMouseEvent * event )  {hax->mouse(event->x(), event->y()); }
 
 void EditorWindow::mouse(int x, int y)
 {
@@ -678,7 +679,7 @@ void EditorWindow::drawStuff()
 		{
 			u8 *foo = &conv->m_pChrData[(conv->m_pBlkChr[curBlk]*16)+(y*2)];
 
-			for (int x=0;x<8;x++)
+			for (int x=7;x>=0;x--)
 			{
 				QString line;
 				int id = 0;
