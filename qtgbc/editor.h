@@ -48,6 +48,7 @@ public:
 private:
 	EditorWindow *hax;
 	void mouseMoveEvent ( QMouseEvent * event ) ;
+	void mousePressEvent ( QMouseEvent * event ) ;
 };
 
 class EditorWindow : public QWidget

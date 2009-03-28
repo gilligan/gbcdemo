@@ -25,6 +25,7 @@ int GbcConv::writePal(const char *filename, const char *name)
 		return -1;
 	}
 
+	fprintf(f, ".equ %s_pal_len %d\n", name, m_iPalCount*8);
 	fprintf(f, ".section \"s_%s_pal\" align 16\n", name);
 	fprintf(f, "%s_pal:\n", name);
 
@@ -47,6 +48,7 @@ int GbcConv::writeChr(const char *filename, const char *name)
 		return -1;
 	}
 
+	fprintf(f, ".equ %s_chr_len %d\n", name, m_iChrCount*16);
 	fprintf(f, ".section \"s_%s_chr\" align 16\n", name);
 	fprintf(f, "%s_chr:\n", name);
 
@@ -71,11 +73,16 @@ int GbcConv::writeMap(const char *filename, const char *name)
 		return -1;
 	}
 
+	// both h/l are the same length . but having them as well might helps macros...
+	fprintf(f, ".equ %s_map_len %d\n", name, m_iBlkCount);
+	fprintf(f, ".equ %s_mapl_len %d\n", name, m_iBlkCount);
+	fprintf(f, ".equ %s_maph_len %d\n", name, m_iBlkCount);
+
 	fprintf(f, ".section \"s_%s_mapl\" align 16\n", name);
 	fprintf(f, "%s_mapl:\n", name);
 	for (u32 i=0;i<m_iBlkCount;i++)
 	{
-		fprintf(f, "  .DB $%02x\n", m_pBlkChr[i]);
+		fprintf(f, "  .DB $%02x\n", m_pBlkChr[i]&0xff);
 	}
 	fprintf(f, ".ends\n");
 
@@ -411,7 +418,8 @@ void shoveError(const char *name, QWidget *widget = NULL)
 
 
 
-void EditorShow::mouseMoveEvent ( QMouseEvent * event )  {hax->mouse(event->x(), event->y()); }
+void EditorShow::mouseMoveEvent  ( QMouseEvent * event )  {hax->mouse(event->x(), event->y()); }
+void EditorShow::mousePressEvent ( QMouseEvent * event )  {hax->mouse(event->x(), event->y()); }
 
 void EditorWindow::mouse(int x, int y)
 {
@@ -678,7 +686,7 @@ void EditorWindow::drawStuff()
 		{
 			u8 *foo = &conv->m_pChrData[(conv->m_pBlkChr[curBlk]*16)+(y*2)];
 
-			for (int x=0;x<8;x++)
+			for (int x=7;x>=0;x--)
 			{
 				QString line;
 				int id = 0;
