@@ -30,6 +30,8 @@ fade_white_to_pal:
 
 color_change_lp:
 
+        push bc
+
         ld a,[hl]
         srl a
         srl a     ; a = blue
@@ -97,6 +99,7 @@ red_foo:
         ld [de],a
         inc de
 
+        pop bc
         dec b
         jp nz,color_change_lp
  

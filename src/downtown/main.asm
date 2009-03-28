@@ -12,11 +12,21 @@
 ;
 .equ SCRATCH $c000
 
-.enum $C0ff
+.enum $C100 EXPORT
         demo_part db
         vbi_ptr   dw
         lcd_ptr   dw
         tim_ptr   dw
+
+        pal1_tmp  dw
+        pal2_tmp  dw
+        pal3_tmp  dw
+        pal4_tmp  dw
+        pal5_tmp  dw
+        pal6_tmp  dw
+        pal7_tmp  dw
+        pal8_tmp  dw
+
 .ende
 
 .bank 0 slot 0
