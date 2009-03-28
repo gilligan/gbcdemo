@@ -33,7 +33,6 @@ int GbcConv::writePal(const char *filename, const char *name)
 	{
 		fprintf(f, ".DW $%04x, $%04x, $%04x, $%04x\n", m_pPalData[(i*4)+0], m_pPalData[(i*4)+1], m_pPalData[(i*4)+2], m_pPalData[(i*4)+3]);
 	}
-	fprintf(f, "%s_pal_end:\n", name);
 	fprintf(f, ".ends\n");
 	fclose(f);
 	return 0;
@@ -58,7 +57,6 @@ int GbcConv::writeChr(const char *filename, const char *name)
 		u16 *chrWord = (u16*)&m_pChrData[(i*16)];
 		fprintf(f, ".DW $%04x, $%04x, $%04x, $%04x, $%04x, $%04x, $%04x, $%04x\n", chrWord[0], chrWord[1], chrWord[2], chrWord[3], chrWord[4], chrWord[5], chrWord[6], chrWord[7]);
 	}
-	fprintf(f, "%s_chr_end:\n", name);
 
 	fprintf(f, ".ends\n");
 	fclose(f);
