@@ -25,6 +25,7 @@ int GbcConv::writePal(const char *filename, const char *name)
 		return -1;
 	}
 
+	fprintf(f, ".equ %s_pal_len %d\n", name, m_iPalCount*8);
 	fprintf(f, ".section \"s_%s_pal\" align 16\n", name);
 	fprintf(f, "%s_pal:\n", name);
 
@@ -32,6 +33,7 @@ int GbcConv::writePal(const char *filename, const char *name)
 	{
 		fprintf(f, ".DW $%04x, $%04x, $%04x, $%04x\n", m_pPalData[(i*4)+0], m_pPalData[(i*4)+1], m_pPalData[(i*4)+2], m_pPalData[(i*4)+3]);
 	}
+	fprintf(f, "%s_pal_end:\n", name);
 	fprintf(f, ".ends\n");
 	fclose(f);
 	return 0;
@@ -47,6 +49,7 @@ int GbcConv::writeChr(const char *filename, const char *name)
 		return -1;
 	}
 
+	fprintf(f, ".equ %s_chr_len %d\n", name, m_iChrCount*16);
 	fprintf(f, ".section \"s_%s_chr\" align 16\n", name);
 	fprintf(f, "%s_chr:\n", name);
 
@@ -55,6 +58,7 @@ int GbcConv::writeChr(const char *filename, const char *name)
 		u16 *chrWord = (u16*)&m_pChrData[(i*16)];
 		fprintf(f, ".DW $%04x, $%04x, $%04x, $%04x, $%04x, $%04x, $%04x, $%04x\n", chrWord[0], chrWord[1], chrWord[2], chrWord[3], chrWord[4], chrWord[5], chrWord[6], chrWord[7]);
 	}
+	fprintf(f, "%s_chr_end:\n", name);
 
 	fprintf(f, ".ends\n");
 	fclose(f);
@@ -71,11 +75,16 @@ int GbcConv::writeMap(const char *filename, const char *name)
 		return -1;
 	}
 
+	// both h/l are the same length . but having them as well might helps macros...
+	fprintf(f, ".equ %s_map_len %d\n", name, m_iBlkCount);
+	fprintf(f, ".equ %s_mapl_len %d\n", name, m_iBlkCount);
+	fprintf(f, ".equ %s_maph_len %d\n", name, m_iBlkCount);
+
 	fprintf(f, ".section \"s_%s_mapl\" align 16\n", name);
 	fprintf(f, "%s_mapl:\n", name);
 	for (u32 i=0;i<m_iBlkCount;i++)
 	{
-		fprintf(f, "  .DB $%02x\n", m_pBlkChr[i]);
+		fprintf(f, "  .DB $%02x\n", m_pBlkChr[i]&0xff);
 	}
 	fprintf(f, ".ends\n");
 
