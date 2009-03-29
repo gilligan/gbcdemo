@@ -29,6 +29,24 @@
 .endm
 
 ;
+; stupid macro to do (hl<<n)
+;
+.macro shl16_hl
+        .rept \1
+        sla l
+        rl h
+        .endr
+.endm
+
+.macro shl16_de
+        .rept \1
+        sla e
+        rl d
+        .endr
+.endm
+
+
+;
 ; load_pal [source] [byte-count]
 ; NOTE: set BCPS prior to this
 .macro load_pal ;

@@ -1,14 +1,19 @@
+.equ temp_blue 0
+.equ temp_green 1
+.equ temp_red 2
+.equ tmp 3
+
 ; 
 ; generic functions
 ;
 
 ; input: [hl] = src palette data
 ;        [de] = dst palette data
-;         c   = fade step (0..31)
+;         c   = color delta added to R/G/B channel
 ;         b   = number of colors
 ; output: 
 ;        [de] = altered palette
-fade_white_to_pal:
+build_faded_palette:
 
 /*
    for (int i=0; i<4; i++){
@@ -26,86 +31,222 @@ fade_white_to_pal:
    
 */
 
-.equ temp_blue 0
-.equ temp_green 1
-.equ temp_red 2
 
 color_change_lp:
 
-        push bc
-
-        ld a,[hl]
-        srl a
-        srl a     ; a = blue
-        add c     ; add color delta
-        bit 5,a
-        jp z,blue_foo
-        ld a,$0f
-blue_foo:
-        ld [SCRATCH+temp_blue],a
-
-        ld a,[hl]
-        sla a
-        sla a
-        sla a
-        ld b,a
-        ld a,[hl+]
-        srl a
-        srl a
-        srl a
-        srl a
-        srl a
-        or b
-        and %11111 ; a = green
-        add c      ; add color delta
-        bit 5,a
-        jp z,green_foo
-        ld a,$0f
-green_foo:
-        ld [SCRATCH+temp_green],a
+        push bc  ; save count/delta
 
         ld a,[hl+]
-        and %11111 ; a = red
-        add c
-        bit 5,a
-        jp z,red_foo
-red_foo:
-        ld a,$0f
+        ld c,a
+        ld a,[hl+]
+        ld b,a   ; b=blue|green, c=green|red
+        
+;
+; get color channels
+;
+
+        ld a,c
+        and %11111
         ld [SCRATCH+temp_red],a
 
-        ; 
-        ; compose R/G/B and store values back
-        ; 
-        ld a,[SCRATCH+temp_blue]
-        sla a
-        sla a
-        ld b,a
-        ld a,[SCRATCH+temp_green]
-        srl a
-        srl a
-        srl a
-        and %11
-        ld [de],a ; store upper byte (blue/green)
-        inc de
+        shr16_bc 5
+        ld a,c
+        and %11111
+        ld [SCRATCH+temp_green],a
+
+        shr16_bc 5
+        ld a,c
+        ld [SCRATCH+temp_blue],a
+
+        pop bc   ; restore count/delta
+        push de  ; save dest
+;
+; add color delta to channels
+;
+
+        ld a,[SCRATCH+temp_red]
+        add c
+        ld e,a
+        and %11100000
+        jp z,store_red
+        ld e,$1f
+store_red:
+        ld a,e
+        ld [SCRATCH+temp_red],a
+
 
         ld a,[SCRATCH+temp_green]
-        and %111
-        sla a
-        sla a
-        sla a
-        sla a
-        sla a
-        ld b,a
+        add c
+        ld e,a
+        and %11100000
+        jp z,store_green
+        ld e,$1f
+store_green:        
+        ld a,e
+        ld [SCRATCH+temp_green],a
+
+
+        ld a,[SCRATCH+temp_blue]
+        add c
+        ld e,a
+        and %11100000
+        jp z,store_blue
+        ld e,$1f
+store_blue:
+        ld a,e
+        ld [SCRATCH+temp_blue],a
+
+
+        pop de    ; restore dest 
+
+;
+; recompose 15bit RGB word
+;
+        push hl   ; save src
+
+        ld h,0
+        ld l,0
+
+        ld a,[SCRATCH+temp_blue]
+        ld l,a
+        shl16_hl 5
+        ld a,[SCRATCH+temp_green]
+        or l
+        ld l,a
+        shl16_hl 5
         ld a,[SCRATCH+temp_red]
-        or b
+        or l
+        ld l,a
+
+        ld a,l
+        ld [de],a
+        inc de
+        ld a,h
         ld [de],a
         inc de
 
-        pop bc
+        pop hl    ; restore src
         dec b
         jp nz,color_change_lp
- 
+
         ret
+
+
+;
+; hl = palette to fade
+; c  = constant to add to R/G/B channels  
+palette_add_constant:
+
+        ld b,4
+add_lp:
+
+        push bc  ; save count/constant
+
+        push hl
+        ld a,[hl+]
+        ld c,a
+        ld a,[hl+]
+        ld b,a     ; b=blue|green, c=green|red
+        pop hl
+
+        ld a,c
+        and %11111
+        ld [SCRATCH+temp_red],a
+
+        shr16_bc 5
+        ld a,c
+        and %11111
+        ld [SCRATCH+temp_green],a
+
+        shr16_bc 5
+        ld a,c
+        ld [SCRATCH+temp_blue],a
+
+        pop bc   ; restore count/constant
+
+        ; check if constant is
+        ; positive or negative
+        bit 7,b
+        jp z,neg_const
+        ld a,$1f
+        jp store_tmp
+
+neg_const:
+        ld a,$00
+store_tmp:
+        ld [SCRATCH+tmp],a
+        
+;
+; add color delta to channels
+;
+
+        ld a,[SCRATCH+temp_red]
+        add c
+        ld e,a
+        and %11100000
+        jp z,__store_red
+        ld a,[SCRATCH+tmp]
+        ld e,a
+__store_red:
+        ld a,e
+        ld [SCRATCH+temp_red],a
+
+
+        ld a,[SCRATCH+temp_green]
+        add c
+        ld e,a
+        and %11100000
+        jp z,__store_green
+        ld a,[SCRATCH+tmp]
+        ld e,a
+__store_green:        
+        ld a,e
+        ld [SCRATCH+temp_green],a
+
+
+        ld a,[SCRATCH+temp_blue]
+        add c
+        ld e,a
+        and %11100000
+        jp z,__store_blue
+        ld a,[SCRATCH+tmp]
+        ld e,a
+__store_blue:
+        ld a,e
+        ld [SCRATCH+temp_blue],a
+
+        ld d,0
+        ld e,0
+
+        ld a,[SCRATCH+temp_blue]
+        ld e,a
+        shl16_de 5
+        ld a,[SCRATCH+temp_green]
+        or e
+        ld e,a
+        shl16_de 5
+        ld a,[SCRATCH+temp_red]
+        or e
+        ld e,a
+
+        ld a,e
+        ld [hl+],a
+        ld a,d
+        ld [hl+],a
+        
+        dec b
+        jp nz, add_lp
+
+
+
+
+;
+; hl = palette to fade
+; c  = constant to sub from R/G/B channels
+palette_sub_constant:
+
+
+
 
 sprite_load_dma:
 	push	af
