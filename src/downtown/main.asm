@@ -2,7 +2,9 @@
 
 .include "../../include/header.inc"
 .include "../../include/regs.inc"
+.include "../../include/carillon.inc"
 .include "../../include/macros.inc"
+
 
 
 ; ram setup
